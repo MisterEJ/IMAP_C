@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -I./include
-LDFLAGS = -L./libs -lcyaml -lssl -lcrypto -lyaml -Wl,-rpath=./libs
+LDFLAGS = -L./libs -lcyaml -lssl -lcrypto -lyaml -ldl -pthread -Wl,-rpath=./libs
 BUILD_DIR = build
 
 # Source files

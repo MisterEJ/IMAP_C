@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic
+CFLAGS = -Wall -Wextra -pedantic -I/include
 LDFLAGS = -L./libs -lcyaml -lssl -lcrypto -Wl,-rpath=./libs
 BUILD_DIR = build
 

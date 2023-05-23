@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic
-LDFLAGS = -L./libcyaml/build/release -lssl -lcrypto -lyaml ./libcyaml/build/release/libcyaml.a -Wl,-rpath=./libcyaml/build/release
+LDFLAGS = -L./libs -lssl -lcrypto -lcyaml -lyaml -Wl,-rpath=./libs
 BUILD_DIR = build
 
 # Source files
@@ -10,13 +10,9 @@ OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 # Output executable
 TARGET = $(BUILD_DIR)/imap
 
-# Libcyaml library
-LIBCYAML_DIR = libcyaml
-LIBCYAML_TARGET = $(LIBCYAML_DIR)/build/release/libcyaml.so.1
+.PHONY: all clean
 
-.PHONY: all clean libcyaml
-
-all: libcyaml $(TARGET)
+all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
@@ -27,14 +23,11 @@ $(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-libcyaml:
-	$(MAKE) -C $(LIBCYAML_DIR) VARIANT=release
-
 clean:
-	$(MAKE) -C $(LIBCYAML_DIR) clean
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean libcyaml
+.PHONY: all clean
+
 
 
 

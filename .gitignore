@@ -1,4 +1,9 @@
 build/
 libcyaml/build/
+attachments/
+emails/
 *.yaml
 *.yml
+*.raw
+*.txt
+*.dat

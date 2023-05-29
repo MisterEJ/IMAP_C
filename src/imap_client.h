@@ -20,6 +20,13 @@ typedef struct imap_client
     int capability_length;
 } imap_client;
 
+typedef struct document
+{
+    char* type;
+    char* name;
+    char* body;
+} document;
+
 imap_client* imap_construct(const char *config_location);
 
 
@@ -56,7 +63,7 @@ void imap_status(imap_client* client, const char* query);
 void imap_append(imap_client* client, const char* query);
 
 void imap_search(imap_client* client, const char* query);
-void imap_fetch(imap_client* client, const char* query);
+void imap_fetch(imap_client* client, const char* query, int flag);
 void imap_check(imap_client* client);
 void imap_close(imap_client* client);
 void imap_expunge(imap_client* client);

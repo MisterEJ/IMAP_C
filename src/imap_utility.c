@@ -1,6 +1,8 @@
 #include "imap_utility.h"
+#include <stdio.h>
 
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #define BUFFER_SIZE 8096
 
@@ -186,6 +188,106 @@ int imap_read(imap_client* client, char **response, int* len, int command_number
     return 0;
 }
 
+void parse_part(char *part, document **documents, int *documents_count) {
+    char *boundary;
+    char *subpart;
+    char *next_subpart;
+    char *content_type_start;
+    char *content_type_end;
 
+    // Find the boundary string in the Content-Type header
+    boundary = strstr(part, "boundary=");
+    if (boundary != NULL) {
+        boundary += 9;  // Skip past "boundary="
+        boundary = strtok(boundary, "\r\n");  // Get the boundary string
+
+        // Find the first subpart
+        subpart = strstr(part, boundary);
+        if (subpart != NULL) {
+            subpart += strlen(boundary) + 2;  // Skip past boundary and newline
+
+            // Loop over subparts
+            while ((next_subpart = strstr(subpart, boundary)) != NULL) {
+                // Allocate memory for the document
+                *documents = realloc(*documents, (*documents_count + 1) * sizeof(document));
+                (*documents)[*documents_count].type = NULL;
+                (*documents)[*documents_count].name = NULL;
+                (*documents)[*documents_count].body = NULL;
+
+                // Find the Content-Type header
+                content_type_start = strstr(subpart, "Content-Type: ");
+                if (content_type_start != NULL) {
+                    content_type_start += 14;  // Skip past "Content-Type: "
+                    content_type_end = strchr(content_type_start, '\n');
+                    if (content_type_end != NULL) {
+                        // Allocate memory for the type and copy the Content-Type into it
+                        (*documents)[*documents_count].type = malloc(content_type_end - content_type_start + 1);
+                        strncpy((*documents)[*documents_count].type, content_type_start, content_type_end - content_type_start);
+                        (*documents)[*documents_count].type[content_type_end - content_type_start] = '\0';
+                    }
+                }
+
+                // Allocate memory for the body and copy the subpart into it
+                (*documents)[*documents_count].body = malloc(next_subpart - subpart + 1);
+                strncpy((*documents)[*documents_count].body, subpart, next_subpart - subpart);
+                (*documents)[*documents_count].body[next_subpart - subpart] = '\0';
+
+                (*documents_count)++;
+
+                subpart = next_subpart + strlen(boundary) + 2;  // Skip past boundary and newline
+            }
+        }
+    } else {
+        // This part is not multipart, so just add it as a document
+        // Allocate memory for the document
+        *documents = realloc(*documents, (*documents_count + 1) * sizeof(document));
+        (*documents)[*documents_count].type = NULL;
+        (*documents)[*documents_count].name = NULL;
+        (*documents)[*documents_count].body = strdup(part);
+
+        (*documents_count)++;
+    }
+}
+
+int extract_attachments(char* email, char* name)
+{
+    // Calling pyhton tool to extract attachments from save email
+
+    struct stat st = {0};
+    if (stat("./emails", &st) == -1) {
+        mkdir("./emails", 0700);
+    }
+
+    char buffer[1024];
+    char nameb[128];
+    sprintf(nameb, "./emails/%s.email.raw", name);
+    sprintf(buffer, "python parse_email.py %s > output.txt", nameb);
+    FILE *fd = fopen(nameb, "w");
+    fprintf(fd, "%s", email);
+    fclose(fd);
+
+    system(buffer);
+    
+    char output[1024];
+    FILE *file = fopen("output.txt", "r");
+    if (file != NULL) {
+        while (fgets(output, sizeof(output), file) != NULL) {
+            printf("%s", output);
+        }
+        fclose(file);
+    }
+
+    return 0;
+}
+
+void remove_substring(char* str, const char* unwanted) {
+    int unwanted_len = strlen(unwanted);
+    char* occurrence = strstr(str, unwanted);
+
+    while (occurrence != NULL) {
+        memmove(occurrence, occurrence + unwanted_len, strlen(occurrence + unwanted_len) + 1);
+        occurrence = strstr(str, unwanted);
+    }
+}
 
 

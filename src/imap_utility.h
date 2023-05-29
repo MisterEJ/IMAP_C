@@ -10,6 +10,8 @@ char* combine_strings(char** strings, int count);
 void free_tokens(char** tokens, int num_tokens);
 char* base64_encode(const char* input, int length);
 int imap_read(imap_client* client, char **response, int* len, int command_number);
+int extract_attachments(char* email, char* name);
+void remove_substring(char* str, const char* unwanted);
 
 
 #endif

@@ -303,12 +303,42 @@ void imap_search(imap_client* client, const char* query)
     freeCommandResponsePair(&crp);
 }
 
-void imap_fetch(imap_client* client, const char* query)
+void imap_fetch(imap_client* client, const char* query, int flag)
 {
     char buffer[BUFFER_SIZE];
     sprintf(buffer, "FETCH %s", query);
     CommandResponsePair crp = imap_send_command(client, buffer);
-    printf("%s\n", crp.response);
+
+    if(flag == 1)
+    {
+        // Find the opening and closing braces
+        char *start_brace = strstr(crp.response, "{") + 1;
+        char *end_brace = strstr(crp.response, "}");
+
+        if(start_brace == NULL || end_brace == NULL) return;
+
+        // Calculate the size of the email body content
+        size_t email_size = strtol(start_brace, &end_brace, 10);
+
+        // Calculate the start position of the email body content
+        char *start_content = strstr(crp.response, "\n") + 1;
+
+        // Extract the email body content
+        char email_body[email_size + 1];
+        strncpy(email_body, start_content, email_size);
+        email_body[email_size] = '\0'; // Null-terminate the strings
+
+        char* len = strstr(query, " ");
+        char name[32];
+        strncpy(name, query, len - query);
+
+        printf("[*] %s\n", name);
+        extract_attachments(email_body, name);
+    }
+    else
+    {
+        printf("%s", crp.response);
+    }
 
     freeCommandResponsePair(&crp);
 }

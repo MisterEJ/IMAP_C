@@ -123,7 +123,16 @@ void execute_command(char* command, int* run, imap_client* client)
     } else
     if(strcmp(cmd, "fetch") == 0)
     {
-        imap_fetch(client, extension);
+        if (strstr(extension, "-se") != NULL)
+        {
+            remove_substring(extension, " -se");
+            printf("[*] Saving and extracting attachments of the email.\n");
+            imap_fetch(client, extension, 1);
+        }
+        else
+        {
+            imap_fetch(client, extension, 0);
+        }
     } else
     if(strcmp(cmd, "check") == 0)
     {
